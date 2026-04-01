@@ -1,12 +1,12 @@
 # vpc  cidr
 variable "vpc_cidr" {
-  type = string
+  type        = string
   description = "codr for vpc "
 }
 
 # vpc_name
 variable "vpc_name" {
-  type = string
+  type        = string
   description = "name for vpc "
 }
 
@@ -31,7 +31,7 @@ variable "vpc_name" {
 # }
 
 variable "private_subnet_data" {
-    type = list(object({
+  type = list(object({
     cidr              = string
     availability_zone = string
     prefix            = string
@@ -40,10 +40,22 @@ variable "private_subnet_data" {
 }
 
 variable "public_subnet_data" {
-    type = list(object({
+  type = list(object({
     cidr              = string
     availability_zone = string
     prefix            = string
   }))
   description = "Map of subnets to create, categorized by type (public/private)"
+}
+
+variable "need_nat_gateway" {
+  type        = bool
+  description = "if nat gateway is needed"
+  default     = false
+}
+
+variable "need_single_nat_gateway" {
+  type        = bool
+  description = "if you need only 1 nat gatway"
+  default     = false
 }
