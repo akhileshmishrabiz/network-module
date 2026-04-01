@@ -45,6 +45,9 @@ resource "aws_subnet" "public" {
   }
 }
 
+output "public_subnet_ids" {
+  value = aws_subnet.public[*].id
+}
 # internet gateway
 resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.main.id
