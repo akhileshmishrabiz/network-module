@@ -39,3 +39,14 @@ variable "need_single_nat_gateway" {
   description = "if you need only 1 nat gatway"
   default     = false
 }
+
+variable "enable_dns_hostnames" {
+  type = bool
+  description = "Enable DNS hostnames in the VPC"
+  default = false
+}
+
+variable "enable_dns_support" {
+  type = bool
+  default = true
+}
