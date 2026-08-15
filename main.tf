@@ -93,20 +93,44 @@ resource "aws_subnet" "private" {
   }
 }
 
-# private route table
+# # private route table
+# resource "aws_route_table" "private" {
+#   vpc_id = aws_vpc.main.id
+
+#   tags = {
+#     Name = "${var.vpc_name}-private-rt"
+#   }
+# }
+
+# Private Route Table can be wrriten more dynamic to handle Multi NAT/AZ for high availability and it avoid cross AZ traffic charges
+# RT1 -> NAT1
+# RT2 -> NAT2
+# RT3 -> NAT3
 resource "aws_route_table" "private" {
+  count = var.need_nat_gateway ? (
+    var.need_single_nat_gateway ? 1 : length(var.public_subnet_data)
+  ) : 1
+
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "${var.vpc_name}-private-rt"
+    Name = "${var.vpc_name}-private-rt-${count.index + 1}"
   }
 }
 
 #  subnet association with private route table
+# resource "aws_route_table_association" "private" {
+#   count          = length(var.private_subnet_data)
+#   subnet_id      = aws_subnet.private[count.index].id
+#   route_table_id = aws_route_table.private.id
+# }
+
 resource "aws_route_table_association" "private" {
-  count          = length(var.private_subnet_data)
-  subnet_id      = aws_subnet.private[count.index].id
-  route_table_id = aws_route_table.private.id
+  count = length(var.private_subnet_data)
+
+  subnet_id = aws_subnet.private[count.index].id
+
+  route_table_id = var.need_single_nat_gateway ? aws_route_table.private[0].id : aws_route_table.private[count.index].id
 }
 
 
@@ -130,10 +154,19 @@ resource "aws_nat_gateway" "nat" {
   }
 }
 
-# route for the route table
+# route for the route table 
+
+# Mult-Nat Architecture
+
+# RT1->NAT A 
+# RT2->NAT B 
+# RT1->NAT C 
+
+# This helps in high availability and ensures no cross AZ transfer charges
+
 resource "aws_route" "private" {
   count                  = var.need_nat_gateway ? var.need_single_nat_gateway ? 1 : length(var.public_subnet_data) : 0
-  route_table_id         = aws_route_table.private.id
+  route_table_id         = aws_route_table.private[count.index].id
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = aws_nat_gateway.nat[count.index].id
 }

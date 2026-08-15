@@ -10,6 +10,8 @@ variable "vpc_name" {
   description = "name for vpc "
 }
 
+# Here we can have a validation block so that if any mismatch in public and private subnets then resources won't be created
+# Also this is helpful when multi-nat's are created where public subnets must equal to privat subnets. It prevents invalid configuartions and avoids unused nat gateways and unnecessary AWS costs. 
 variable "private_subnet_data" {
   type = list(object({
     cidr              = string
@@ -17,6 +19,15 @@ variable "private_subnet_data" {
     prefix            = string
   }))
   description = "Map of subnets to create, categorized by type (public/private)"
+
+  validation {
+    condition = (
+      var.need_single_nat_gateway ||
+      length(var.private_subnet_data) == length(var.public_subnet_data)
+    )
+
+    error_message = "When using multiple NAT Gateways, public and private subnet counts must be equal."
+  }
 }
 
 variable "public_subnet_data" {
